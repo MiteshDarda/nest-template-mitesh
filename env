@@ -9,6 +9,9 @@ RUN_MIGRATIONS=true
 DB_LOG=true
 #$ ------------------------------------------ Utils ------------------------------------------
 PORT=3000
-JWT_SECRET=secret
 MODE=DEV
+
+JWT_EXPIRES_IN='60s'
+JWT_SECRET=secret
+
 
