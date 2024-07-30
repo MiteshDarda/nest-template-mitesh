@@ -6,6 +6,8 @@ import { User } from './entities/user.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { PasswordTransformer } from 'src/utils/class-transformer/password-transformer';
 import { LoginDto } from './dto/login.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtLoginType } from 'src/auth/jwt-param.type';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +16,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private readonly entityManager: EntityManager,
     private readonly passwordTransformer: PasswordTransformer,
+    private readonly authService: AuthService,
   ) {}
 
   //* ========================================== CREATE USER ==========================================
@@ -22,27 +25,34 @@ export class UsersService {
    */
   async create(createUserDto: CreateUserDto) {
     try {
-      console.log(createUserDto);
       const user = await this.userRepository
         .createQueryBuilder()
         .insert()
         .into(User)
         .values(createUserDto)
         .execute();
-      console.log(user);
-      return 'This action adds a new user';
+      const { accessToken } = this.authService.login({
+        userId: user.identifiers[0].id,
+        email: createUserDto.email,
+        role: createUserDto.role,
+      } as JwtLoginType);
+      return {
+        message: 'User created successfully',
+        accessToken,
+      };
     } catch (error) {
+      console.error(error);
       if (error?.code === '23505') {
         throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
       }
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
   //* ========================================== Login ==========================================
+  /**
+   * Login a user
+   */
   async login(loginDto: LoginDto) {
     try {
       const user = await this.userRepository
@@ -52,25 +62,25 @@ export class UsersService {
       if (!user) {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-      console.log(user);
-      console.log(
-        this.passwordTransformer.isPasswordValid(
-          loginDto.password,
-          user.password,
-        ),
+      const isPasswordValid = this.passwordTransformer.isPasswordValid(
+        loginDto.password,
+        user.password,
       );
-      if (
-        !this.passwordTransformer.isPasswordValid(
-          loginDto.password,
-          user.password,
-        )
-      ) {
+      if (!isPasswordValid) {
         throw new HttpException(
           'Password is incorrect',
           HttpStatus.UNAUTHORIZED,
         );
       }
-      return 'Login successful';
+      const { accessToken } = this.authService.login({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      } as JwtLoginType);
+      return {
+        message: 'Login successful',
+        accessToken,
+      };
     } catch (error) {
       console.error(error);
       throw error;

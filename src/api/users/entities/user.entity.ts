@@ -1,6 +1,6 @@
 import { BaseEntity } from 'src/database/base.entity';
+import { Role } from 'src/roles/roles.enum';
 import { Column, Entity } from 'typeorm';
-import { UserRole } from '../enum/role.enum';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -16,6 +16,6 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 300 })
   password: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.User })
-  role: UserRole;
+  @Column({ type: 'enum', enum: Role, default: Role.User })
+  role: Role;
 }

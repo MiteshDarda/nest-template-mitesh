@@ -5,9 +5,9 @@ import {
   IsString,
   IsStrongPassword,
 } from 'class-validator';
-import { UserRole } from '../enum/role.enum';
 import { Transform } from 'class-transformer';
 import { PasswordTransformer } from 'src/utils/class-transformer/password-transformer';
+import { Role } from 'src/roles/roles.enum';
 
 export class CreateUserDto {
   @IsString()
@@ -28,6 +28,6 @@ export class CreateUserDto {
   @Transform(({ value }) => new PasswordTransformer().to(value))
   password: string;
 
-  @IsEnum(UserRole)
-  role: UserRole = UserRole.User;
+  @IsEnum(Role)
+  role: Role = Role.User;
 }

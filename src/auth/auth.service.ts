@@ -1,31 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtLoginType, JwtParamType } from './jwt-param.type';
 
 @Injectable()
 export class AuthService {
-  private readonly jwtOptions: any;
+  private readonly secret: string;
+  private readonly expiresIn: string;
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {
-    this.jwtOptions = {
-      secret: this.configService.get<string>('jwt.secret'),
-      signOptions: {
+    this.secret = this.configService.get<string>('jwt.secret');
+    this.expiresIn = this.configService.get<string>('jwt.expiresIn');
+  }
+
+  login(user: JwtLoginType) {
+    try {
+      const payload = { email: user.email, id: user.userId, role: user.role };
+      const token = this.jwtService.sign(payload, {
+        secret: this.secret,
+        expiresIn: this.expiresIn,
         algorithm: 'HS256',
-      },
-    };
+      });
+
+      return {
+        accessToken: token,
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 
-  login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
-    return {
-      access_token: this.jwtService.sign(payload, this.jwtOptions),
-    };
-  }
-
-  validate(payload: any) {
-    return { userId: payload.sub, username: payload.username };
+  validate(payload: JwtParamType) {
+    return { userId: payload.id, email: payload.email, role: payload.role };
   }
 }
