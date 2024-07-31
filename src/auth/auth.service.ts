@@ -15,7 +15,7 @@ export class AuthService {
     this.secret = this.configService.get<string>('jwt.secret');
     this.expiresIn = this.configService.get<string>('jwt.expiresIn');
   }
-
+  //* ========================================== LOGIN ==========================================
   login(user: JwtLoginType) {
     try {
       const payload = { email: user.email, id: user.userId, role: user.role };
@@ -34,6 +34,7 @@ export class AuthService {
     }
   }
 
+  //* ========================================== VALIDATE ==========================================
   validate(payload: JwtParamType) {
     return { userId: payload.id, email: payload.email, role: payload.role };
   }
